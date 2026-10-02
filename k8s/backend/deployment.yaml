@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-summary-backend
+  namespace: todo-prod
+  labels:
+    app: todo-summary-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-summary-backend
+  template:
+    metadata:
+      labels:
+        app: todo-summary-backend
+    spec:
+      containers:
+        - name: todo-summary-backend
+          image: venkateshsindagi/todo-summary-backend:2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: todo-backend-config
+            - secretRef:
+                name: todo-backend-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /api/todos
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/todos
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3

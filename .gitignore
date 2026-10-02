@@ -15,3 +15,8 @@ target/
 # IDE
 .idea/
 .vscode/
+
+k8s/database/secret.yaml
+
+k8s/backend/secret.yaml
+k8s/database/secret.yaml
