@@ -281,7 +281,6 @@ The monitoring design covers:
 Operational documentation is available in:
 MONITORING_AND_OPERATIONS.md
 FAILURE_AND_ROLLBACK.md
-docs/ARCHITECTURE.md
 
 Repository Structure
 .
@@ -294,7 +293,7 @@ Repository Structure
 │   ├── database/
 │   └── frontend/
 ├── gitops/
-├── docs/
+
 ├── FAILURE_AND_ROLLBACK.md
 ├── MONITORING_AND_OPERATIONS.md
 └── README.md
