@@ -1,0 +1,17 @@
+# Local environment files
+.env
+.env.*
+
+# Node
+node_modules/
+build/
+
+# Java
+target/
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
