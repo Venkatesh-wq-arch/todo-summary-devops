@@ -124,3 +124,191 @@ A full-stack application to manage personal to-do items, summarize pending tasks
 ![Screenshot (1144)](https://github.com/user-attachments/assets/474b1a46-36c8-4407-8bf9-a46ca911603b)
 
 ![Screenshot (1143)](https://github.com/user-attachments/assets/1e9f8783-d0df-42ce-a3f8-ec7ca5e7c078)
+
+# DevOps Implementation
+
+## Overview
+
+This project has been extended with a DevOps delivery workflow covering containerization, CI, Kubernetes, GitOps, rollback, and operational documentation.
+
+## DevOps Stack
+
+- Git and GitHub
+- Maven
+- Docker
+- Jenkins
+- Docker Hub
+- Kubernetes
+- Kind
+- Argo CD
+- MySQL
+- ConfigMaps and Kubernetes Secrets
+
+## CI Pipeline
+
+Jenkins performs the following stages:
+
+1. Checkout source code
+2. Run Maven backend tests
+3. Build backend Docker image
+4. Build frontend Docker image
+5. Tag images using the Jenkins build number
+6. Push versioned images to Docker Hub
+
+Jenkins uses credentials stored in Jenkins Credentials rather than hardcoding registry or database credentials.
+
+## Containerization
+
+Both frontend and backend applications use production-oriented Dockerfiles.
+
+The backend uses:
+
+- Multi-stage Maven build
+- Java 17 runtime
+- Non-root application user
+- `.dockerignore`
+- External environment configuration
+
+The frontend uses:
+
+- Multi-stage Node.js build
+- Nginx runtime
+- Non-root Nginx container
+- Kubernetes backend service routing through Nginx
+- `.dockerignore`
+
+## Kubernetes
+
+The application is deployed in the `todo-prod` namespace.
+
+The Kubernetes implementation includes:
+
+- Backend Deployment with 2 replicas
+- Frontend Deployment with 2 replicas
+- Backend ClusterIP Service
+- Frontend ClusterIP Service
+- MySQL StatefulSet
+- MySQL headless Service
+- PersistentVolumeClaim
+- ConfigMap
+- Kubernetes Secrets
+- CPU and memory requests/limits
+- Readiness probes
+- Liveness probes
+
+Kubernetes manifests are located under:
+
+```text
+k8s/
+├── backend/
+├── database/
+└── frontend/
+
+GitOps
+Argo CD manages the Kubernetes deployment from the Git repository.
+The GitOps manifests are stored under:
+gitops/
+
+The deployment flow is:
+Developer
+    |
+    v
+GitHub
+    |
+    v
+Jenkins
+    |
+    +--> Maven Tests
+    |
+    +--> Docker Build
+    |
+    +--> Docker Hub
+    |
+    v
+GitOps Configuration
+    |
+    v
+Argo CD
+    |
+    v
+Kubernetes
+
+Jenkins does not directly deploy to Kubernetes.
+Argo CD continuously compares the Git desired state with the Kubernetes state and synchronizes changes.
+Configuration and Secrets
+Non-sensitive configuration is stored in Kubernetes ConfigMaps.
+Sensitive values such as:
+- MySQL password
+- Cohere API key
+- Slack webhook
+are stored in Kubernetes Secrets.
+Secret YAML files are excluded from Git using .gitignore.
+Rollback
+Rollback is performed through Git.
+The rollback process is:
+Faulty Image
+     |
+     v
+Git Commit
+     |
+     v
+Argo CD Sync
+     |
+     v
+Failed Deployment
+     |
+     v
+git revert
+     |
+     v
+Argo CD Sync
+     |
+     v
+Known-Good Image
+
+A faulty backend image tag was intentionally deployed during testing. Kubernetes reported ErrImagePull/ImagePullBackOff. The Git commit was then reverted and Argo CD restored the previous known-good image.
+Monitoring and Operations
+The monitoring design covers:
+- Pod readiness
+- Pod restarts
+- CPU and memory usage
+- HTTP errors
+- Application latency
+- Database availability
+- Persistent storage
+- Kubernetes node health
+- Deployment availability
+Operational documentation is available in:
+MONITORING_AND_OPERATIONS.md
+FAILURE_AND_ROLLBACK.md
+docs/ARCHITECTURE.md
+
+Repository Structure
+.
+├── Backend/
+├── Frontend/
+├── Jenkinsfile
+├── jenkins/
+├── k8s/
+│   ├── backend/
+│   ├── database/
+│   └── frontend/
+├── gitops/
+├── docs/
+├── FAILURE_AND_ROLLBACK.md
+├── MONITORING_AND_OPERATIONS.md
+└── README.md
+
+Current Environment
+The DevOps implementation was validated locally using a multi-node Kind Kubernetes cluster.
+The application was successfully tested with:
+- Frontend running in Kubernetes
+- Backend running with 2 replicas
+- MySQL running with persistent storage
+- Backend-to-MySQL communication
+- Frontend-to-backend communication through Kubernetes Service
+- Jenkins CI image builds
+- Docker Hub image publishing
+- Argo CD synchronization
+- Git-based rollback
+AWS/EKS was not used in the local implementation. For a production AWS deployment, the Kubernetes workloads can be migrated to EKS and the database can be moved to a highly available managed database service.
