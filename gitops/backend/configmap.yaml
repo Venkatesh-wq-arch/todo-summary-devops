@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-backend-config
+  namespace: todo-prod
+data:
+  SPRING_DATASOURCE_URL: jdbc:mysql://todo-mysql:3306/todo_db
+  SPRING_DATASOURCE_USERNAME: root

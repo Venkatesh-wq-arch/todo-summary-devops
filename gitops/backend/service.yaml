@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-summary-backend
+  namespace: todo-prod
+  labels:
+    app: todo-summary-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: todo-summary-backend
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

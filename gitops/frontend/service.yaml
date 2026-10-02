@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-summary-frontend
+  namespace: todo-prod
+  labels:
+    app: todo-summary-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: todo-summary-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
