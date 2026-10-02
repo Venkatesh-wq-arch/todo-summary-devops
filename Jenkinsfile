@@ -4,6 +4,7 @@ pipeline {
     environment {
         BACKEND_IMAGE = "todo-summary-backend"
         FRONTEND_IMAGE = "todo-summary-frontend"
+
         MYSQL_CONTAINER = "todo-test-db"
         MYSQL_PORT = "3307"
     }
@@ -95,11 +96,48 @@ pipeline {
             steps {
                 sh '''
                     docker build \
-                      --build-arg REACT_APP_API_BASE_URL=http://localhost:8080/api \
                       -t ${FRONTEND_IMAGE}:${BUILD_NUMBER} \
                       -t ${FRONTEND_IMAGE}:latest \
                       ./Frontend/todo
                 '''
+            }
+        }
+
+        stage('Push Images') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKERHUB_USERNAME',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        echo "${DOCKERHUB_TOKEN}" | docker login \
+                          --username "${DOCKERHUB_USERNAME}" \
+                          --password-stdin
+
+                        docker tag ${BACKEND_IMAGE}:${BUILD_NUMBER} \
+                          ${DOCKERHUB_USERNAME}/todo-summary-backend:${BUILD_NUMBER}
+
+                        docker tag ${BACKEND_IMAGE}:${BUILD_NUMBER} \
+                          ${DOCKERHUB_USERNAME}/todo-summary-backend:latest
+
+                        docker tag ${FRONTEND_IMAGE}:${BUILD_NUMBER} \
+                          ${DOCKERHUB_USERNAME}/todo-summary-frontend:${BUILD_NUMBER}
+
+                        docker tag ${FRONTEND_IMAGE}:${BUILD_NUMBER} \
+                          ${DOCKERHUB_USERNAME}/todo-summary-frontend:latest
+
+                        docker push ${DOCKERHUB_USERNAME}/todo-summary-backend:${BUILD_NUMBER}
+                        docker push ${DOCKERHUB_USERNAME}/todo-summary-backend:latest
+
+                        docker push ${DOCKERHUB_USERNAME}/todo-summary-frontend:${BUILD_NUMBER}
+                        docker push ${DOCKERHUB_USERNAME}/todo-summary-frontend:latest
+
+                        docker logout
+                    '''
+                }
             }
         }
     }
